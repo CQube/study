@@ -1,11 +1,11 @@
 {
-	"failure_rate" : {
+	"denial_rates" : {
 		"display": 3.0,
 		"processor": 1.5,
 		"memory": 2.5,
 		"power_supply": 2.0
 	},
-	"failure_rate_factor": 1.2,
+	"denial_rate_factor": 1.2,
 	"beta": 1.0,
 	"time": 0.8,
 	"operating_condition_factor": {
