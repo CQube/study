@@ -1,28 +1,26 @@
 {
-	"Failure rate" : {
-		,
-		,
-		,
-
+	"failure_rate" : {
+		"display": 3.0,
+		"processor": 1.5,
+		"memory": 2.5,
+		"power_supply": 2.0
 	},
-	,
-	,
-	,
-	{
-		{
-			,
-			,
-
-		},
-		{
-			,
-
-		},
-		{
-			,
-
-		}
-	}
-	,
-
+	"failure_rate_factor": 1.2,
+	"beta": 1.0,
+	"time": 0.8,
+	"operating_condition_factor": {
+		"temperature": 1.5,
+		"vibration": 1.8,
+		"overload": 1.2
+	},
+	"storing": {
+		"storing_time": 0.8,
+		"fail_rate_drop_factor": 1.2
+	},
+	"cyclic_work": {
+		"time": 0.8,
+		"storing_time_factor": 0.5
+	},
+	"gamma": 60.0,
+	"dt": 1.0
 }
