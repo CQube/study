@@ -1,11 +1,8 @@
 import numpy as np
 from functools import reduce
 
+
 class Calculator:
-    def __init__(self)
-        pass
-
-
     '''
     1. Выполнить расчет показателей безотказности ПК при 
     постоянном включении и нормальных условиях эксплуатации:
@@ -29,7 +26,7 @@ class Calculator:
 
         # Calculated hardware failure rates.
         for counter in range(0, len(hwDenialRates)):
-            hwFailureRates[counter] = hwDenialRate * beta
+            hwFailureRates.append(hwDenialRates[counter] * beta)
 
             hwDenialRateResult += hwDenialRates[counter]
             hwFailureRateResult += hwFailureRates[counter]
@@ -38,22 +35,23 @@ class Calculator:
         swFailureRateResult = beta * swDenialRateResult
 
         computerDenialRate = swDenialRateResult + hwDenialRateResult
-        computerFailureRate = swFailureRateResult + swFailureRateResult
+        computerFailureRate = swFailureRateResult + hwFailureRateResult
         
         return {
             "software": {
                 "DenialRate": swDenialRateResult,
-                "FailureRate" swFailureRateResult:
+                "FailureRate": swFailureRateResult
             },
             "hardware": {
                 "DenialRate": hwDenialRateResult,
-                "FailureRate" hwFailureRateResult:
+                "FailureRate": hwFailureRateResult
             },
             "computer": {
                 "DenialRate": computerDenialRate,
                 "FailureRate": computerFailureRate
             }
         }
+
 
     # Средняя наработка до отказа ТАО сбоя ТАС аппаратных средств и ПК в целом
     # (ТКО, ТКС) с учетом программных средств (ТПО, ТПС).
@@ -149,8 +147,8 @@ class Calculator:
     Принимается возвращаемое значение метода DenialAndFailureRate.
     '''
     def DenialAndWorkingTillFailureRate(self, rates, time, factors):
-        extremeConditionsHwDenialRate = reduce(lambda x, y: x * y, factors)
-                                               * (rates["hardware"]["DenialRate"] 
+        extremeConditionsHwDenialRate = reduce(lambda x, y: x * y, factors) \
+                                               * (rates["hardware"]["DenialRate"]
                                                + rates["hardware"]["FailureRate"])
         averageWorkingTillDenial = 1 / extremeConditionsHwDenialRate
 
@@ -164,7 +162,7 @@ class Calculator:
     Принимается возвращаемое значение метода DenialAndWorkingTillFailureRate.
     '''
     def UptimeAndDenialCahnce(self, denialRateAndWorkingTillDenail, time):
-        extremeConditionsUptimeChance 
+        extremeConditionsUptimeChance \
             = np.exp( -(denialRateAndWorkingTillDenail["hwDenialRate"] * time))
         extremeConditionsDenialChance = 1 - extremeConditionsUptimeChance
 
@@ -182,13 +180,29 @@ class Calculator:
 
     # Интенсивности отказов ΛКХ и средней наработке до отказа ТсрКХ аппаратных
     # средств (ПК) при хранении.
-    def DenialAndAvarageWorkingToFailureRate(self):
-        pass
+    # λАОХ = λАО / G
+    # ТАОХ  = 1 / λАОХ
+    def DenialAndAvarageWorkingToFailureRate(self, hwDenialRate, failRateDropFactor):
+        denialRate = hwDenialRate / failRateDropFactor
+        avarageWorkingToFailure = 1 / denialRate
+
+        return {
+            "denialRate": denialRate,
+            "workingToFailureRate": avarageWorkingToFailure
+        }
 
     # Вероятности безотказного хранения PКХ(t) и отказа при хранении QКХ(t)
     # аппаратных средств (ПК).
-    def SafeStorageAndDenialChance(self):
-        pass
+    # PКОХ(tх) = PАОХ(tх) = exp(-λАОХ tх) = exp(-λАО tх/G)
+    # QКОХ(tх) = QАОХ(tх) = 1 - PКХ(tх)
+    def SafeStorageAndDenialChance(self, hwDenialRate, storingTime, failRateDropFactor):
+        safeStorageChance = np.exp((-hwDenialRate * storingTime) / failRateDropFactor)
+        denialChance = 1 - safeStorageChance
+
+        return {
+            "safeStorageChance": safeStorageChance,
+            "denialChance": denialChance
+        }
 
 
     '''
@@ -198,13 +212,43 @@ class Calculator:
     '''
 
     # Интенсивности отказов аппаратных λАОЦ, программных λПОЦ средств и ПК в целом.
-    def TotalDenialRate(self):
-        pass
+    # ΛКОЦ  = (1 + (G - 1) r) / G * ΛКО
+    '''
+    Принимается возвращаемое значение метода DenialAndFailureRate.
+    '''
+    def TotalDenialRate(self, rates, storingTimeFactor, failRateDropFactor):
+        hwDenialRate = (1 + (failRateDropFactor - 1) * storingTimeFactor) \
+                        / failRateDropFactor * rates["hardware"]["DenialRate"]
+        swDenialRate = (1 + (failRateDropFactor - 1) * storingTimeFactor) \
+                        / failRateDropFactor * rates["software"]["DenialRate"]
+        pcDenialRate = (1 + (failRateDropFactor - 1) * storingTimeFactor) \
+                        / failRateDropFactor * rates["computer"]["DenialRate"]
+
+        return {
+            "hwDenialRate": hwDenialRate,
+            "swDenialRate": swDenialRate,
+            "pcDenialRate": pcDenialRate
+        }
 
     # Вероятности безотказной работы аппаратных PАОЦ(t), программных PПОЦ(t)
     # средств и ПК в целом PКОЦ(t).
-    def TotalUptimeRate(self):
-        pass
+ 	# exp[-(1+(G-1)r) (ΛКО t)/G]
+    '''
+    Принимается возвращаемое значение метода DenialAndFailureRate.
+    '''
+    def TotalUptimeChance(self, rates, storingTime, storingTimeFactor, failRateDropFactor):
+        hwUptimeChance = np.exp(-(1 + (failRateDropFactor - 1) * storingTimeFactor) \
+                                * (rates["hardware"]["DenialRate"] * storingTime) / failRateDropFactor)
+        swUptimeChance = np.exp(-(1 + (failRateDropFactor - 1) * storingTimeFactor) \
+                                * (rates["software"]["DenialRate"] * storingTime) / failRateDropFactor)
+        pcUptimeChance = np.exp(-(1 + (failRateDropFactor - 1) * storingTimeFactor) \
+                                * (rates["computer"]["DenialRate"] * storingTime) / failRateDropFactor)
+
+        return {
+            "hwUptimeChance": hwUptimeChance,
+            "swUptimeChance": swUptimeChance,
+            "pcUptimeChance": pcUptimeChance
+        }
 
 
 if __name__ != "__main__":
