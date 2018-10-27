@@ -161,7 +161,7 @@ class Calculator:
     '''
     Принимается возвращаемое значение метода DenialAndWorkingTillFailureRate.
     '''
-    def UptimeAndDenialCahnce(self, denialRateAndWorkingTillDenail, time):
+    def UptimeAndDenialChance(self, denialRateAndWorkingTillDenail, time):
         extremeConditionsUptimeChance \
             = np.exp( -(denialRateAndWorkingTillDenail["hwDenialRate"] * time))
         extremeConditionsDenialChance = 1 - extremeConditionsUptimeChance
